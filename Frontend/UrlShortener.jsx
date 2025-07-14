@@ -5,7 +5,6 @@ import './UrlShortener.css';
 const DEFAULT_VALIDITY = 30;
 const MAX_URLS = 5;
 
-// Checks if the url is valid (accepts www. and http/https)
 function isValidUrl(val) {
   let test = val;
   if (val.startsWith('www.')) {
@@ -19,7 +18,6 @@ function isValidUrl(val) {
   }
 }
 
-// Checks if shortcode is valid
 function isValidShortcode(val) {
   if (!val) return true;
   if (val.length < 3 || val.length > 12) return false;
@@ -143,72 +141,70 @@ export default function UrlShortener(props) {
     logEvent({ stack: 'frontend', level: 'info', packageName: 'component', message: 'Shortened ' + arr.length + ' URLs' });
   }
 
+  let inputRows = [];
+  for (let i = 0; i < list.length; i++) {
+    let item = list[i];
+    inputRows.push(
+      <div className="url-input-block" key={i}>
+        <input
+          type="text"
+          placeholder="Long URL"
+          value={item.url}
+          onChange={function(e) { handleChange(i, 'url', e.target.value); }}
+          required
+          className={item.error ? 'input-error' : ''}
+        />
+        <input
+          type="number"
+          placeholder="Validity (min)"
+          value={item.validity}
+          onChange={function(e) { handleChange(i, 'validity', e.target.value); }}
+          min={1}
+        />
+        <input
+          type="text"
+          placeholder="Custom Shortcode"
+          value={item.shortcode}
+          onChange={function(e) { handleChange(i, 'shortcode', e.target.value); }}
+        />
+        {list.length > 1 ? (
+          <button type="button" className="remove-btn" onClick={function() { removeRow(i); }}>-</button>
+        ) : null}
+        {item.error ? <div className="error-msg">{item.error}</div> : null}
+      </div>
+    );
+  }
+
+  let resultRows = [];
+  if (result.length > 0) {
+    for (let i = 0; i < result.length; i++) {
+      let item = result[i];
+      resultRows.push(
+        <div className="result-item" key={i}>
+          <div>Original: {item.url}</div>
+          <div>Short URL: <a href={`/${item.shortcode}`} target="_blank" rel="noopener noreferrer">http://localhost:3000/{item.shortcode}</a></div>
+          <div>Expires at: {new Date(item.expiry).toLocaleString()}</div>
+        </div>
+      );
+    }
+  }
+
   return (
     <div className="url-shortener-container">
       <h2>URL Shortener</h2>
       <form onSubmit={handleSubmit}>
-        {/* Render all input rows */}
-        {(() => {
-          let rows = [];
-          for (let i = 0; i < list.length; i++) {
-            let item = list[i];
-            rows.push(
-              <div className="url-input-block" key={i}>
-                <input
-                  type="text"
-                  placeholder="Long URL"
-                  value={item.url}
-                  onChange={e => handleChange(i, 'url', e.target.value)}
-                  required
-                  className={item.error ? 'input-error' : ''}
-                />
-                <input
-                  type="number"
-                  placeholder="Validity (min)"
-                  value={item.validity}
-                  onChange={e => handleChange(i, 'validity', e.target.value)}
-                  min={1}
-                />
-                <input
-                  type="text"
-                  placeholder="Custom Shortcode"
-                  value={item.shortcode}
-                  onChange={e => handleChange(i, 'shortcode', e.target.value)}
-                />
-                {list.length > 1 && (
-                  <button type="button" className="remove-btn" onClick={() => removeRow(i)}>-</button>
-                )}
-                {item.error && <div className="error-msg">{item.error}</div>}
-              </div>
-            );
-          }
-          return rows;
-        })()}
+        {inputRows}
         <div className="btn-row">
           <button type="button" onClick={addRow} disabled={list.length >= MAX_URLS}>Add URL</button>
           <button type="submit">Shorten URLs</button>
         </div>
       </form>
-      {/* Show results */}
-      {result.length > 0 && (
+      {result.length > 0 ? (
         <div className="results-block">
           <h3>Shortened URLs</h3>
-          {(() => {
-            let out = [];
-            for (let i = 0; i < result.length; i++) {
-              let item = result[i];
-              out.push(
-                <div className="result-item" key={i}>
-                  <div>Original: {item.url}</div>
-                  <div>Short URL: <a href={`/${item.shortcode}`} target="_blank" rel="noopener noreferrer">http://localhost:3000/{item.shortcode}</a></div>
-                  <div>Expires at: {new Date(item.expiry).toLocaleString()}</div>
-                </div>
-              );
-            }
-            return out;
-          })()}
+          {resultRows}
         </div>
-      )}
+      ) : null}
     </div>
   );
 } 
